@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Market Basket Analysis</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Market Basket Analysis">
+  <meta name="author" content="Dhiraj Khanna">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/highlight.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Market Basket Analysis</h1>
+    <h2>Recommender System in R</h2>
+    <p>Dhiraj Khanna<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <article data-timings="">
+    <style>
+em {
+  font-style: italic
+}
+strong {
+  font-weight: bold;
+}
+</style>
+
+<h2>Introduction to Market Basket Analysis (MBA)</h2>
+
+<ol>
+<li>Looks at purchase coincidence</li>
+<li>It investigates whether two products are being purchased together, and whether the purchase of one product increases the likelihood of purchasing the other</li>
+<li>Data arranged in large matrix of rows and columns</li>
+<li>Rows represent <strong>shoppers</strong> and columns are different <strong>products</strong></li>
+<li>Entries in the matrix are 1 or 0.</li>
+<li>MBA used by last.fm and Netflix</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>The Math behind MBA</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Look for <strong>association rules</strong> such as \(A = LHS (\text{buy chips}) \to B = RHS (\text{buy beer})\)</li>
+<li>LHS is <strong>antecedent</strong>, RHS is <strong>consequent</strong> and arrow is <strong>is related to</strong></li>
+<li>&quot;Confidence&quot; is the condidtional probability of RHS, given LHS \[P(B|A) = \frac{P(A \text{and} B)}{P(A)}\]</li>
+<li><strong>Support</strong> is the frquency of A or B and is calculated as \(P(A)\) or \(P(B)\)</li>
+<li><em>Lift of A on B</em> \[ lift(A \to B) = \frac{P(B|A)}{P(B)}\]</li>
+<li>If lift &gt; 1, things are good</li>
+<li>But big lifts are relevant only if the confidence is also high</li>
+<li><em>Leverage</em> of A = LHS on B = RHS as \[leverage(A \to B) = P(A \text{and} B) - P(A)P(B)\]</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>MBA on Last.fm dataset</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Suppose you were given data from a music community site. For each user you
+may have a log of every artist he/she had downloaded to their computer. You
+may even have demographic information on the user (such as age, sex, location,
+occupation, and interests). Your objective is to build a system that recommends
+new music to users in this community.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Analysis in R</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Let&#39;s read in the data</p>
+
+<pre><code class="r">lastfm &lt;- read.csv(&quot;data/lastfm.csv&quot;)
+head(lastfm)
+</code></pre>
+
+<pre><code>##   user                  artist sex country
+## 1    1   red hot chili peppers   f Germany
+## 2    1 the black dahlia murder   f Germany
+## 3    1               goldfrapp   f Germany
+## 4    1        dropkick murphys   f Germany
+## 5    1                le tigre   f Germany
+## 6    1              schandmaul   f Germany
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <article data-timings="">
+    <p>Convert &quot;user&quot; into a factor</p>
+
+<pre><code class="r">lastfm$user &lt;- factor(lastfm$user)
+</code></pre>
+
+<p>Now we will use the base <code>split()</code> function to split the artists list by &quot;user&quot; and remove duplicate entries of artists. It is important to do so becuase later when we use the <code>arules</code> package, it is necessary to have unique values as it is not possible to coerce list with transactions with duplicated items.</p>
+
+<pre><code class="r">playlist &lt;- split(x=lastfm[,&quot;artist&quot;],f=lastfm$user)
+playlist[1:2]
+</code></pre>
+
+<pre><code>## $`1`
+##  [1] red hot chili peppers   the black dahlia murder
+##  [3] goldfrapp               dropkick murphys       
+##  [5] le tigre                schandmaul             
+##  [7] edguy                   jack johnson           
+##  [9] eluveitie               the killers            
+## [11] judas priest            rob zombie             
+## [13] john mayer              the who                
+## [15] guano apes              the rolling stones     
+## 1004 Levels: ...and you will know us by the trail of dead [unknown] ... zero 7
+## 
+## $`3`
+##  [1] devendra banhart    boards of canada    cocorosie          
+##  [4] aphex twin          animal collective   atmosphere         
+##  [7] joanna newsom       air                 portishead         
+## [10] massive attack      broken social scene arcade fire        
+## [13] plaid               prefuse 73          m83                
+## [16] the flashbulb       pavement            goldfrapp          
+## [19] amon tobin          sage francis        four tet           
+## [22] max richter         autechre            radiohead          
+## [25] neutral milk hotel  beastie boys        aesop rock         
+## [28] mf doom             the books          
+## 1004 Levels: ...and you will know us by the trail of dead [unknown] ... zero 7
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:;">
+  <article data-timings="">
+    <p>An artist may be mentioned by the same user more than once, hence it is important to remove artist duplicates before creating the incidence matrix.</p>
+
+<pre><code class="r">playlist &lt;- lapply(playlist,unique) ## remove artist duplicates
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:;">
+  <article data-timings="">
+    <p>We now have a list of users and the artists (unique values) they listen to. Now we will use the <code>arules</code> package for the rest of the assignmnet.</p>
+
+<pre><code class="r">library(arules)
+</code></pre>
+
+<pre><code>## Warning: package &#39;arules&#39; was built under R version 3.2.3
+</code></pre>
+
+<pre><code class="r">playlist &lt;- as(playlist,&quot;transactions&quot;)
+</code></pre>
+
+<p>This converts the playlist to a data class defined in <code>arules</code> package as transactions. We can now set a threshold for the required support.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:;">
+  <article data-timings="">
+    <pre><code class="r">itemFrequencyPlot(playlist,support=.08,cex.names=1.5)
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-6-1.png" alt="plot of chunk unnamed-chunk-6"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-9" style="background:;">
+  <article data-timings="">
+    <p>To look at the top three most popular artists :</p>
+
+<pre><code class="r">head(sort(itemFrequency(playlist), decreasing=T),3)
+</code></pre>
+
+<pre><code>##   radiohead the beatles    coldplay 
+##   0.1802667   0.1778667   0.1585333
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-10" style="background:;">
+  <article data-timings="">
+    <p>Now let us create the association rules using the <code>apriori</code> function with a support of 0.01 and confidence of 0.45.</p>
+
+<pre><code class="r">musicrules &lt;- apriori(playlist,parameter=list(support=.01, confidence=.45))
+</code></pre>
+
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport support minlen maxlen
+##        0.45    0.1    1 none FALSE            TRUE    0.01      1     10
+##  target   ext
+##   rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 150 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[1004 item(s), 15000 transaction(s)] done [0.04s].
+## sorting and recoding items ... [655 item(s)] done [0.01s].
+## creating transaction tree ... done [0.01s].
+## checking subsets of size 1 2 3 4 done [0.06s].
+## writing ... [120 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].
+</code></pre>
+
+<hr>
+
+<p>Now on these rules, we will make a subset of only those rules which provide a lift of greater than 6.</p>
+
+<pre><code class="r">inspect(sort(subset(musicrules, subset=lift &gt;= 6), by=&quot;confidence&quot;))
+</code></pre>
+
+<pre><code>## Error in inspect(sort(subset(musicrules, subset = lift &gt;= 6), by = &quot;confidence&quot;)): error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;inspect&#39;: Error in subset.default(musicrules, subset = lift &gt;= 6) : 
+##   object &#39;lift&#39; not found
+## Calls: sort -&gt; subset -&gt; subset.default
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-11" style="background:;">
+  <article data-timings="">
+    <p>Again heartening to see that classic rock still figures in the top 3 as far as confidence is concerned. We could convert all of this to a data frame and write it as a csv file.</p>
+
+<pre><code class="r">lift6 &lt;- sort(subset(musicrules, subset=lift &gt;= 6), by=&quot;confidence&quot;)
+</code></pre>
+
+<pre><code>## Error in subset.default(musicrules, subset = lift &gt;= 6): object &#39;lift&#39; not found
+</code></pre>
+
+<pre><code class="r">lift6 &lt;- as(lift6, &quot;data.frame&quot;)
+</code></pre>
+
+<pre><code>## Error in .class1(object): object &#39;lift6&#39; not found
+</code></pre>
+
+<pre><code class="r">write.csv(lift6, &quot;lift6.csv&quot;)
+</code></pre>
+
+<pre><code>## Error in is.data.frame(x): object &#39;lift6&#39; not found
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-12" style="background:;">
+  <article data-timings="">
+    <p>The top 3 rules having the highest confidence are:</p>
+
+<pre><code class="r">head(lift6, 3)
+</code></pre>
+
+<pre><code>## Error in head(lift6, 3): error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;head&#39;: Error: object &#39;lift6&#39; not found
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-13" style="background:;">
+  <article data-timings="">
+    <p>We will use the <code>arulesViz</code> library for plotting all the rules with a support of 0.01 and confidence of 0.45.</p>
+
+<pre><code class="r">library(arulesViz)
+</code></pre>
+
+<pre><code>## Warning: package &#39;arulesViz&#39; was built under R version 3.2.3
+</code></pre>
+
+<pre><code class="r">plot(musicrules, method=&quot;grouped&quot;, interactive=T)
+</code></pre>
+
+<pre><code>## Interactive mode.
+</code></pre>
+
+<pre><code>## Error in convertUnit(x, unitTo, &quot;x&quot;, &quot;location&quot;, &quot;x&quot;, &quot;location&quot;, valueOnly = valueOnly): &#39;x&#39; argument must be a unit object
+</code></pre>
+
+<p><img src="assets/fig/unnamed-chunk-12-1.png" alt="plot of chunk unnamed-chunk-12"></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='NA'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='The Math behind MBA'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='MBA on Last.fm dataset'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Analysis in R'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='NA'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='NA'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='NA'>
+         7
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=8 title='NA'>
+         8
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=9 title='NA'>
+         9
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=10 title='NA'>
+         10
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=11 title='NA'>
+         11
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=12 title='NA'>
+         12
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=13 title='NA'>
+         13
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        processEscapes: true
+      }
+    });
+  </script>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script> -->
+  <script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
