@@ -75,12 +75,12 @@ strong {
     <ul>
 <li>Look for <strong>association rules</strong> such as \(A = LHS (\text{buy chips}) \to B = RHS (\text{buy beer})\)</li>
 <li>LHS is <strong>antecedent</strong>, RHS is <strong>consequent</strong> and arrow is <strong>is related to</strong></li>
-<li>&quot;Confidence&quot; is the condidtional probability of RHS, given LHS \[P(B|A) = \frac{P(A \text{and} B)}{P(A)}\]</li>
+<li>&quot;Confidence&quot; is the condidtional probability of RHS, given LHS \(P(B|A) = \frac{P(A \text{and} B)}{P(A)}\)</li>
 <li><strong>Support</strong> is the frquency of A or B and is calculated as \(P(A)\) or \(P(B)\)</li>
-<li><em>Lift of A on B</em> \[ lift(A \to B) = \frac{P(B|A)}{P(B)}\]</li>
+<li>Lift of A on B \(lift(A \to B) = \frac{P(B|A)}{P(B)}\)</li>
 <li>If lift &gt; 1, things are good</li>
 <li>But big lifts are relevant only if the confidence is also high</li>
-<li><em>Leverage</em> of A = LHS on B = RHS as \[leverage(A \to B) = P(A \text{and} B) - P(A)P(B)\]</li>
+<li>Leverage of A = LHS on B = RHS as \(leverage(A \to B) = P(A \text{and} B) - P(A)P(B)\)</li>
 </ul>
 
   </article>
@@ -272,55 +272,10 @@ playlist[1:2]
 
 <slide class="" id="slide-11" style="background:;">
   <article data-timings="">
-    <p>Again heartening to see that classic rock still figures in the top 3 as far as confidence is concerned. We could convert all of this to a data frame and write it as a csv file.</p>
-
-<pre><code class="r">lift6 &lt;- sort(subset(musicrules, subset=lift &gt;= 6), by=&quot;confidence&quot;)
-</code></pre>
-
-<pre><code>## Error in subset.default(musicrules, subset = lift &gt;= 6): object &#39;lift&#39; not found
-</code></pre>
-
-<pre><code class="r">lift6 &lt;- as(lift6, &quot;data.frame&quot;)
-</code></pre>
-
-<pre><code>## Error in .class1(object): object &#39;lift6&#39; not found
-</code></pre>
-
-<pre><code class="r">write.csv(lift6, &quot;lift6.csv&quot;)
-</code></pre>
-
-<pre><code>## Error in is.data.frame(x): object &#39;lift6&#39; not found
-</code></pre>
-
-  </article>
-  <!-- Presenter Notes -->
-</slide>
-
-<slide class="" id="slide-12" style="background:;">
-  <article data-timings="">
-    <p>The top 3 rules having the highest confidence are:</p>
-
-<pre><code class="r">head(lift6, 3)
-</code></pre>
-
-<pre><code>## Error in head(lift6, 3): error in evaluating the argument &#39;x&#39; in selecting a method for function &#39;head&#39;: Error: object &#39;lift6&#39; not found
-</code></pre>
-
-  </article>
-  <!-- Presenter Notes -->
-</slide>
-
-<slide class="" id="slide-13" style="background:;">
-  <article data-timings="">
     <p>We will use the <code>arulesViz</code> library for plotting all the rules with a support of 0.01 and confidence of 0.45.</p>
 
 <pre><code class="r">library(arulesViz)
-</code></pre>
-
-<pre><code>## Warning: package &#39;arulesViz&#39; was built under R version 3.2.3
-</code></pre>
-
-<pre><code class="r">plot(musicrules, method=&quot;grouped&quot;, interactive=T)
+plot(musicrules, method=&quot;grouped&quot;, interactive=T)
 </code></pre>
 
 <pre><code>## Interactive mode.
@@ -329,7 +284,7 @@ playlist[1:2]
 <pre><code>## Error in convertUnit(x, unitTo, &quot;x&quot;, &quot;location&quot;, &quot;x&quot;, &quot;location&quot;, valueOnly = valueOnly): &#39;x&#39; argument must be a unit object
 </code></pre>
 
-<p><img src="assets/fig/unnamed-chunk-12-1.png" alt="plot of chunk unnamed-chunk-12"></p>
+<p><img src="assets/fig/unnamed-chunk-10-1.png" alt="plot of chunk unnamed-chunk-10"></p>
 
   </article>
   <!-- Presenter Notes -->
@@ -403,18 +358,6 @@ playlist[1:2]
       <a href="#" target="_self" rel='tooltip' 
         data-slide=11 title='NA'>
          11
-      </a>
-    </li>
-    <li>
-      <a href="#" target="_self" rel='tooltip' 
-        data-slide=12 title='NA'>
-         12
-      </a>
-    </li>
-    <li>
-      <a href="#" target="_self" rel='tooltip' 
-        data-slide=13 title='NA'>
-         13
       </a>
     </li>
   </ul>

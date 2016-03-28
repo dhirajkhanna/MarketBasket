@@ -30,17 +30,15 @@ strong {
 6. MBA used by last.fm and Netflix
 
 --- .class #id 
-
 ## The Math behind MBA
-
 - Look for **association rules** such as $A = LHS (\text{buy chips}) \to B = RHS (\text{buy beer})$
 - LHS is **antecedent**, RHS is **consequent** and arrow is **is related to**
-- "Confidence" is the condidtional probability of RHS, given LHS $$P(B|A) = \frac{P(A \text{and} B)}{P(A)}$$
+- "Confidence" is the condidtional probability of RHS, given LHS $P(B|A) = \frac{P(A \text{and} B)}{P(A)}$
 - **Support** is the frquency of A or B and is calculated as $P(A)$ or $P(B)$
-- *Lift of A on B* $$ lift(A \to B) = \frac{P(B|A)}{P(B)}$$
+- Lift of A on B $lift(A \to B) = \frac{P(B|A)}{P(B)}$
 - If lift > 1, things are good
 - But big lifts are relevant only if the confidence is also high
-- *Leverage* of A = LHS on B = RHS as $$leverage(A \to B) = P(A \text{and} B) - P(A)P(B)$$
+- Leverage of A = LHS on B = RHS as $leverage(A \to B) = P(A \text{and} B) - P(A)P(B)$
 
 ---
 ## MBA on Last.fm dataset
@@ -209,57 +207,11 @@ inspect(sort(subset(musicrules, subset=lift >= 6), by="confidence"))
 ```
 
 ---
-Again heartening to see that classic rock still figures in the top 3 as far as confidence is concerned. We could convert all of this to a data frame and write it as a csv file.
-
-
-```r
-lift6 <- sort(subset(musicrules, subset=lift >= 6), by="confidence")
-```
-
-```
-## Error in subset.default(musicrules, subset = lift >= 6): object 'lift' not found
-```
-
-```r
-lift6 <- as(lift6, "data.frame")
-```
-
-```
-## Error in .class1(object): object 'lift6' not found
-```
-
-```r
-write.csv(lift6, "lift6.csv")
-```
-
-```
-## Error in is.data.frame(x): object 'lift6' not found
-```
-
----
-The top 3 rules having the highest confidence are:
-
-```r
-head(lift6, 3)
-```
-
-```
-## Error in head(lift6, 3): error in evaluating the argument 'x' in selecting a method for function 'head': Error: object 'lift6' not found
-```
-
----
 We will use the `arulesViz` library for plotting all the rules with a support of 0.01 and confidence of 0.45.
 
 
 ```r
 library(arulesViz)
-```
-
-```
-## Warning: package 'arulesViz' was built under R version 3.2.3
-```
-
-```r
 plot(musicrules, method="grouped", interactive=T)
 ```
 
@@ -271,4 +223,4 @@ plot(musicrules, method="grouped", interactive=T)
 ## Error in convertUnit(x, unitTo, "x", "location", "x", "location", valueOnly = valueOnly): 'x' argument must be a unit object
 ```
 
-![plot of chunk unnamed-chunk-12](assets/fig/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-10](assets/fig/unnamed-chunk-10-1.png)
